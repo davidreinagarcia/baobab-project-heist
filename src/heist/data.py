@@ -1,27 +1,34 @@
-"""Lectura de los ficheros de datos del ladrón."""
-import os
+"""Lectura de los ficheros de datos del ladron."""
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-RAW_DIR = "data/raw"
+RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
+OUT = Path(__file__).resolve().parents[2] / "outputs"
 
 
 def load_instance(path):
-    """Lee un fichero ks_* y devuelve (values, volumes, capacity)."""
+    # 1. La primera linea del fichero tiene dos numeros: cuantos objetos hay y la capacidad
     with open(path) as f:
-        n, capacity = map(int, f.readline().split())
+        primera_linea = f.readline().split()
+    capacity = int(primera_linea[1])
+
+    # 2. El resto es una tabla con una fila por objeto: valor y volumen.
+    #    int64 porque algunos volumenes son de cientos de millones.
     tabla = np.loadtxt(path, skiprows=1, dtype=np.int64)
-    return tabla[:, 0], tabla[:, 1], capacity
+    values = tabla[:, 0]
+    volumes = tabla[:, 1]
+    return values, volumes, capacity
 
 
 def inventory():
-    """Una fila por fichero: cuántos objetos, qué capacidad y qué tamaño tendría la tabla de DP."""
+    # Una fila por fichero: cuantos objetos, que capacidad y que tamano tendria la tabla de DP
     filas = []
-    for nombre in os.listdir(RAW_DIR):
-        values, volumes, capacity = load_instance(os.path.join(RAW_DIR, nombre))
+    for fichero in RAW_DIR.iterdir():
+        values, volumes, capacity = load_instance(fichero)
         filas.append({
-            "fichero": nombre,
+            "fichero": fichero.name,
             "objetos": len(values),
             "capacidad": capacity,
             "celdas_tabla": len(values) * capacity,
@@ -34,4 +41,4 @@ if __name__ == "__main__":
     tabla = inventory()
     tabla["MB_tabla_1byte"] = (tabla["celdas_tabla"] / 1e6).round(1)
     print(tabla.to_string(index=False))
-    tabla.to_csv("outputs/inventory.csv", index=False)
+    tabla.to_csv(OUT / "inventory.csv", index=False)

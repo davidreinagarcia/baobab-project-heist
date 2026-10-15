@@ -16,10 +16,11 @@ hasta llegar a la solución del problema completo. Lo probamos con los 22 datase
 | Fichero | Qué hace | Funciones | Estado |
 |---|---|---|---|
 | `src/heist/data.py` | Lee los ficheros `ks_*` y resume los 22 datasets | `load_instance()`, `inventory()` | hecho |
-| `src/heist/knapsack.py` | La programación dinámica y la recuperación de los objetos elegidos | por decidir | pendiente |
-| `src/heist/run_all.py` | Lanza la DP en los 22 datasets y guarda valor, tiempo y objetos | por decidir | pendiente |
+| `src/heist/knapsack.py` | Resuelve una mochila con el solver de programación dinámica de OR-Tools | `resolver()` | hecho |
+| `src/heist/run_all.py` | Lanza el solver en los 22 datasets, comprueba el resultado y guarda valor, tiempo y objetos | `main()` | hecho |
 
-Se lanza con `.venv/bin/python -m src.heist.data`. Escribe `outputs/inventory.csv`.
+Se lanza con `.venv/bin/python -m src.heist.data` (escribe `outputs/inventory.csv`) y con
+`.venv/bin/python -m src.heist.run_all` (escribe `outputs/results.csv` y `outputs/solutions/`).
 
 ## Formato de los datos
 
@@ -196,39 +197,45 @@ El inventario completo está en `outputs/inventory.csv`. Estos son los casos que
 Los otros 16 datasets tienen menos de 530 millones de celdas y la DP los resuelve al instante.
 El enunciado habla de hasta 1.000 objetos, pero `K` llega a 10^8, y lo que manda es `n · K`, no `n`.
 
-**Pruebas preliminares (por confirmar en el informe final).** Con la DP calculando solo el valor
-(una fila, sin lista de objetos), `milp` con `mip_rel_gap=0` da el mismo óptimo que la DP en todos los
-datasets probados. Dos avisos. Primero, `milp` por defecto tolera un 0,01% de error y en `ks_100_1` y
-`ks_300_0` devolvía un valor algo menor que el óptimo, así que hay que fijar `mip_rel_gap=0`. Segundo,
-su tiempo es impredecible: en `ks_60_0` y `ks_100_0` agotó el límite de 120 s sin poder demostrar que
-su solución era óptima (aunque el valor era el correcto), mientras que la DP tarda 0,0 s. Al revés, en
-`ks_82_0` y `ks_106_0` la DP tarda más de 80 s y `milp` menos de un segundo. Los dos métodos fallan en
-sitios distintos, de ahí la idea de combinarlos según el tamaño. Estamos probando también el solver de
-mochila de OR-Tools.
+**Lo que midió OR-Tools (resultados reales de `run_all.py`).** Su solver de DP no necesitó la tabla
+completa de `n · K` celdas: con un tope de 4 GB de memoria resolvió los 22 datasets con óptimo
+certificado (`is_solution_optimal()` es `True` en todos). Los más lentos son `ks_10000_0` (53 s),
+`ks_106_0` (29 s), `ks_82_0` (13 s) y `ks_400_0` (13 s); los otros 18 tardan menos de 6 s. Por eso
+ya no hace falta tratar aparte los datasets "donde la tabla no cabe".
 
 ---
 
-# Sobre `scipy.optimize` (corrección importante)
+# Por qué OR-Tools y no una DP escrita a mano
 
-**`scipy.optimize` no tiene programación dinámica.** Es un módulo de optimización continua y lineal
-(`minimize`, `linprog`, `curve_fit`...). No existe en él una función "mochila" ni nada que construya tablas
-de DP. Lo único suyo que resuelve la mochila es `scipy.optimize.milp`, que es el modelo de programación
-entera de arriba resuelto con ramificación y acotación (el solver HiGHS), **no DP**.
+Decisión tomada: usamos `KNAPSACK_DYNAMIC_PROGRAMMING_SOLVER` de OR-Tools. La DP de las secciones
+anteriores sigue siendo la explicación de **qué hace** el solver por dentro; no la reescribimos porque
+el solver ya la implementa en C++, es exacto y cubre los 22 datasets sin problemas de memoria.
 
-Qué propongo y por qué:
+Se probó también `KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER`, el otro solver de mochila de OR-Tools:
+es instantáneo en casi todos, pero falla con `bad_alloc` (sin memoria) en `ks_82_0` y `ks_106_0`, y en
+`ks_100_0` no consigue demostrar el óptimo en 60 s (aunque el valor era el correcto). Por eso la DP es
+la opción segura. Los valores de ambos coinciden en todos los datasets donde los dos terminan.
 
-| Pieza | Herramienta | Por qué |
-|---|---|---|
-| La DP (método principal, el que se explica) | **NumPy** | La tabla es un array, y rellenar toda una fila es una línea (`np.maximum`) en vez de un bucle por capacidad |
-| Comprobar que la DP está bien | **`scipy.optimize.milp`** | Resuelve el mismo problema por otro camino. Si ambos dan el mismo valor óptimo en los 22 datasets, la DP está validada |
-| Tabla de resultados | **pandas** | Ya lo conoces; una fila por dataset |
+---
 
-Así usas SciPy como querías, pero para lo que sirve: la programación entera es justo lo que ya das en
-ISyE, y que coincida con la DP es el mejor argumento de que el código es correcto. La DP en sí es código
-nuestro, no una llamada a una librería.
+# `knapsack.py` y `run_all.py`
 
-Alternativa descartada: OR-Tools (Google) trae un solver de mochila directo, pero es un paquete grande
-y oculta el algoritmo; justo lo contrario de lo que queremos poder explicar.
+## `resolver(values, volumes, capacity)`
+
+Crea el solver de DP, le da los datos y devuelve `(valor_total, elegidos, optimo)`.
+
+- `KnapsackSolver(SolverType.KNAPSACK_DYNAMIC_PROGRAMMING_SOLVER, ...)`: elige el algoritmo de DP.
+- `set_time_limit(600)`: corta a los 10 minutos; si se agota, `optimo` sale `False`.
+- `init(valores, [volumenes], [capacidad])`: los volúmenes y la capacidad van en listas porque el
+  solver admite varias restricciones a la vez (una mochila con peso Y volumen, por ejemplo).
+- `solve()` devuelve el valor máximo; `best_solution_contains(i)` dice si el objeto `i` se coge.
+- Todo son enteros: los ficheros ya lo son (si no, habría que multiplicar por una potencia de 10).
+
+## `main()` de `run_all.py`
+
+Para cada fichero: carga, resuelve, mide el tiempo y comprueba por su cuenta (sin fiarse del solver) que
+el volumen de lo cogido no pasa de `K` y que la suma de valores coincide. Guarda `outputs/results.csv` y,
+por dataset, `outputs/solutions/<fichero>`: primera línea `valor optimo(1/0)`, segunda línea un 0/1 por objeto.
 
 ---
 
@@ -238,7 +245,8 @@ y oculta el algoritmo; justo lo contrario de lo que queremos poder explicar.
 
 Lee un fichero `ks_*` y devuelve tres cosas: los valores, los volúmenes y la capacidad.
 
-- `open(path)` y `f.readline().split()`: lee solo la primera línea y la parte por espacios, que da `n` y `K`.
+- `open(path)` y `f.readline().split()`: lee solo la primera línea y la parte por espacios, que da dos
+  textos (`n` y `K`). Nos quedamos con el segundo, `int(primera_linea[1])`, que es la capacidad.
 - `np.loadtxt(path, skiprows=1, dtype=np.int64)`: lee el resto como una tabla de `n` filas y 2 columnas
   (`skiprows=1` salta la primera línea). `int64` porque algunos datasets tienen volúmenes de cientos de
   millones y la suma de volúmenes llega a mil millones.
@@ -252,11 +260,34 @@ ejecutar el fichero la imprime y la guarda en `outputs/inventory.csv`.
 
 ---
 
-# Decisiones pendientes (para decidirlas juntos)
+# Preguntas de discusión: ¿es este el método óptimo? ¿habría algo mejor?
 
-1. **Una versión de la DP o dos.** Una con bucles `for` anidados (la más fácil de contar, es la tabla
-   de arriba), o la de NumPy (más rápida, una línea por objeto). Propongo la de NumPy con un comentario
-   que enlace con la fórmula, comprobada contra el ejemplo a mano de arriba.
-2. **Qué hacemos con los datasets donde la tabla no cabe** (ver la tabla de tamaños): intentarlo y
-   documentar el límite con honestidad, o apoyarnos en `milp` para esos.
-3. **Si guardamos el tiempo de ejecución por dataset** para comparar DP y `milp` en el informe.
+**Respuesta corta.** Para estos 22 datasets, sí: es exacto (óptimo demostrado en todos) y el peor caso
+tarda 53 s. Para instancias mucho más grandes o distintas, hay alternativas, y conviene saber cuándo.
+
+**Qué es "óptimo" aquí.** Dos cosas distintas: óptimo en *solución* (el valor es el máximo posible, que
+la DP garantiza) y óptimo en *eficiencia* (el algoritmo más rápido posible). La primera la cumplimos. La
+segunda no se pretende: la DP es pseudopolinómica, `n · K`, y crece con la capacidad.
+
+**Alternativas, y cuándo ganan**
+
+| Método | Idea | Cuándo gana a la DP |
+|---|---|---|
+| Algoritmos de núcleo (Expknap, Minknap, Combo de Pisinger y Martello) | Resuelven solo un "núcleo" pequeño de objetos alrededor del punto donde se llena la mochila al ordenar por valor/volumen; el núcleo crece solo si la instancia es difícil | Muchos objetos y `K` enorme. Son el estado del arte para mochila 0/1 exacta, Combo es el más citado |
+| Ramificación y acotación (branch and bound) | Explora un árbol de decisiones y descarta ramas que no pueden mejorar | Capacidad enorme, donde la tabla de DP es inmanejable. En nuestra prueba fue instantáneo en casi todo, pero su tiempo es impredecible (falló en 2 datasets y en otro no certificó el óptimo) |
+| Esquema de aproximación (FPTAS) | Reduce la escala de los valores y aplica DP: garantiza al menos `(1 - ε) · óptimo` en tiempo `O(n² / ε)` | Cuando basta una solución casi óptima y `K` o los valores son gigantescos |
+| Meet in the middle | Parte los objetos en dos mitades y combina las listas de sumas: `O(2^(n/2))` | Pocos objetos (hasta unos 40) y `K` astronómica; con 82 o más objetos ya no sirve |
+| Programación entera / CP-SAT | Modelo genérico con un solver de propósito general | Cuando la mochila tiene condiciones extra (conflictos entre objetos, varias mochilas); para la mochila simple suele perder contra algoritmos específicos |
+
+**Una matización honesta.** Hay literatura que reporta solvers genéricos (incluido OR-Tools) que no
+terminaban en instancias de mochila muy grandes donde Combo sí lo hacía. Nosotros no hemos llegado a ese
+límite con estos datos, pero si el dataset creciera a millones de objetos o a capacidades de 10^10,
+Combo o un FPTAS serían las respuestas.
+
+**Cómo se adaptaría a otros casos**
+- Valores o volúmenes decimales: multiplicar por una potencia de 10 y trabajar con enteros.
+- Más de una restricción (peso y volumen): el solver ya admite listas de restricciones, pero deja de ser
+  tan eficiente, el problema pasa a ser mochila multidimensional.
+- Objetos incompatibles entre sí (conflictos): el problema pasa a ser fuertemente NP-difícil y deja de
+  existir una DP pseudopolinómica; hay que pasar a programación entera o CP-SAT.
+- Si se pudieran coger fracciones de objeto: el voraz por valor/volumen es óptimo (mochila continua).
