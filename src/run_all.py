@@ -3,7 +3,7 @@ import time
 
 import pandas as pd
 
-from .data import OUT, RAW_DIR, load_instance
+from .data import DATA_DIR, OUT, load_instance
 from .knapsack import resolver
 
 
@@ -12,7 +12,7 @@ def main():
     (OUT / "solutions").mkdir(exist_ok=True)
 
     filas = []
-    for fichero in sorted(RAW_DIR.iterdir()):
+    for fichero in sorted(DATA_DIR.iterdir()):
         nombre = fichero.name
 
         # 1. Leer el dataset y resolverlo, midiendo cuanto tarda

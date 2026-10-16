@@ -4,8 +4,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
-OUT = Path(__file__).resolve().parents[2] / "outputs"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+OUT = Path(__file__).resolve().parents[1] / "outputs"
 
 
 def load_instance(path):
@@ -25,7 +25,7 @@ def load_instance(path):
 def inventory():
     # Una fila por fichero: cuantos objetos, que capacidad y que tamano tendria la tabla de DP
     filas = []
-    for fichero in RAW_DIR.iterdir():
+    for fichero in DATA_DIR.iterdir():
         values, volumes, capacity = load_instance(fichero)
         filas.append({
             "fichero": fichero.name,

@@ -15,16 +15,16 @@ hasta llegar a la solución del problema completo. Lo probamos con los 22 datase
 
 | Fichero | Qué hace | Funciones | Estado |
 |---|---|---|---|
-| `src/heist/data.py` | Lee los ficheros `ks_*` y resume los 22 datasets | `load_instance()`, `inventory()` | hecho |
-| `src/heist/knapsack.py` | Resuelve una mochila con el solver de programación dinámica de OR-Tools | `resolver()` | hecho |
-| `src/heist/run_all.py` | Lanza el solver en los 22 datasets, comprueba el resultado y guarda valor, tiempo y objetos | `main()` | hecho |
+| `src/data.py` | Lee los ficheros `ks_*` y resume los 22 datasets | `load_instance()`, `inventory()` | hecho |
+| `src/knapsack.py` | Resuelve una mochila con el solver de programación dinámica de OR-Tools | `resolver()` | hecho |
+| `src/run_all.py` | Lanza el solver en los 22 datasets, comprueba el resultado y guarda valor, tiempo y objetos | `main()` | hecho |
 
-Se lanza con `.venv/bin/python -m src.heist.data` (escribe `outputs/inventory.csv`) y con
-`.venv/bin/python -m src.heist.run_all` (escribe `outputs/results.csv` y `outputs/solutions/`).
+Se lanza con `.venv/bin/python -m src.data` (escribe `outputs/inventory.csv`) y con
+`.venv/bin/python -m src.run_all` (escribe `outputs/results.csv` y `outputs/solutions/`).
 
 ## Formato de los datos
 
-Cada fichero de `data/raw/` se llama `ks_<objetos>_<número>`. La primera línea tiene dos números, la
+Cada fichero de `data/` se llama `ks_<objetos>_<número>`. La primera línea tiene dos números, la
 cantidad de objetos `n` y la capacidad de la mochila `K`. Cada una de las `n` líneas siguientes tiene
 `valor volumen` de un objeto. Ejemplo, `ks_lecture_dp_1`:
 
@@ -254,7 +254,7 @@ Lee un fichero `ks_*` y devuelve tres cosas: los valores, los volúmenes y la ca
 
 ## `inventory()`
 
-Recorre `data/raw/`, carga cada fichero y arma una tabla de pandas con una fila por dataset: objetos,
+Recorre `data/`, carga cada fichero y arma una tabla de pandas con una fila por dataset: objetos,
 capacidad, `celdas_tabla` (= objetos × capacidad, el tamaño de la tabla de DP) y volumen total. Al
 ejecutar el fichero la imprime y la guarda en `outputs/inventory.csv`.
 

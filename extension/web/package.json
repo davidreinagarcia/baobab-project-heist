@@ -1,0 +1,9 @@
+{
+  "name": "baobab-heist-web",
+  "private": true,
+  "type": "module",
+  "description": "Solo para desarrollo/tests en Node. deploy.sh lo excluye del sitio publicado.",
+  "scripts": {
+    "test": "node test/parity.test.mjs"
+  }
+}
