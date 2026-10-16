@@ -187,6 +187,105 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; background: var
 #cartel .stats b { color: var(--oro); }
 #cartel .stats .mal { color: var(--rojo); }
 
+/* ===== MODAL BIENVENIDA ===== */
+#bienvenida {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(5,8,20,.90);
+  background-image: radial-gradient(rgba(255,206,58,.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px;
+}
+#bienvenida.oculto { display: none; }
+
+.bvn-wrap {
+  display: flex; align-items: stretch;
+  max-height: 90vh; gap: 0;
+}
+
+.bvn-panel {
+  position: relative;
+  width: 460px; max-width: 82vw;
+  background: var(--noche2);
+  border: 5px solid #111;
+  border-radius: 18px;
+  padding: 22px 24px 20px;
+  box-shadow: 8px 8px 0 #000, 0 0 0 2px var(--oro);
+  overflow-y: auto; overflow-x: hidden;
+  flex-shrink: 0;
+}
+
+.bvn-char {
+  width: auto; max-width: 130px;
+  object-fit: contain; object-position: bottom center;
+  flex-shrink: 0; align-self: stretch;
+  filter: drop-shadow(4px 0 8px rgba(0,0,0,.8));
+}
+.bvn-ladron {
+  transform: scaleX(-1);
+  filter: drop-shadow(-4px 0 8px rgba(0,0,0,.8));
+}
+@media (max-width: 700px) { .bvn-char { display: none; } }
+
+.bvn-cerrar {
+  position: absolute; top: 10px; right: 12px;
+  background: var(--rojo); color: #fff;
+  border: 3px solid #111; border-radius: 50%;
+  width: 30px; height: 30px;
+  font-size: 17px; font-weight: 900; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 2px 2px 0 #000; font-family: 'Bangers';
+  transition: transform .1s;
+}
+.bvn-cerrar:hover { transform: scale(1.12); }
+
+.bvn-titulo-wrap {
+  text-align: center; margin-bottom: 16px; padding-right: 22px;
+}
+.bvn-titulo {
+  font-family: 'Bangers'; font-size: clamp(36px, 8vw, 60px);
+  color: var(--oro); line-height: 1;
+  text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 3px -2px 0 #000;
+  transform: rotate(-2deg); display: inline-block;
+}
+.bvn-sub {
+  font-family: 'Baloo'; font-size: 12px; color: var(--tenue);
+  font-weight: 800; margin-top: 2px; letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.bvn-viñeta {
+  background: var(--caja); border: 3px solid #111;
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 10px;
+  position: relative;
+}
+.bvn-viñeta-label {
+  font-family: 'Bangers'; font-size: 11px; letter-spacing: 2px;
+  color: var(--oro); background: #111; border-radius: 6px;
+  padding: 1px 8px; display: inline-block; margin-bottom: 5px;
+}
+.bvn-viñeta p {
+  margin: 0; font-size: 13px; line-height: 1.55; color: var(--texto);
+}
+.bvn-viñeta b { color: var(--oro); }
+
+.bvn-lista {
+  margin: 0; padding-left: 18px; font-size: 13px;
+  line-height: 1.7; color: var(--texto);
+}
+.bvn-lista b { color: var(--oro); }
+
+.bvn-footer {
+  font-family: 'Bangers'; font-size: 22px; color: var(--rojo);
+  text-align: center; margin: 12px 0 10px;
+  text-shadow: 2px 2px 0 #000; letter-spacing: 1px;
+  transform: rotate(-1.5deg); display: block;
+}
+
+.bvn-btn-jugar {
+  display: flex; margin: 0 auto; width: fit-content;
+}
+
 /* Valor gordo en pantalla de escape */
 #cartel .stats .valor-gordo {
   display: block; font-family: 'Bangers'; font-size: clamp(52px, 12vw, 130px);

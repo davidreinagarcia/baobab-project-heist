@@ -30,6 +30,42 @@
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 7v5l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
 </svg>
 
+<!-- ===== MODAL BIENVENIDA ===== -->
+<div id="bienvenida">
+  <div class="bvn-wrap">
+    <img class="bvn-char bvn-ladron" id="bvn-ladron" src="assets/sprites/ladron.webp" alt="">
+    <div class="bvn-panel">
+      <button class="bvn-cerrar" id="bvn-cerrar">&times;</button>
+      <div class="bvn-titulo-wrap">
+        <div class="bvn-titulo">EL GOLPE</div>
+        <div class="bvn-sub">Atraco al museo &middot; Mochila 0/1</div>
+      </div>
+      <div class="bvn-viñeta">
+        <div class="bvn-viñeta-label">TÚ</div>
+        <p>Eres un ladrón de guante blanco. El museo cierra a medianoche y la policía llega en cuestión de segundos. Tienes una mochila con capacidad limitada y el tiempo corre.</p>
+      </div>
+      <div class="bvn-viñeta">
+        <div class="bvn-viñeta-label">EL PROBLEMA</div>
+        <p>Por cada objeto decides: <b>&iquest;lo cojo o lo dejo?</b> Eso es la <b>mochila 0/1</b>, uno de los problemas de optimización más famosos de la informática. No puedes partir los objetos; te los llevas enteros o los dejas.</p>
+      </div>
+      <div class="bvn-viñeta">
+        <div class="bvn-viñeta-label">CÓMO JUGAR</div>
+        <ol class="bvn-lista">
+          <li>Elige <b>Plan &oacute;ptimo</b> &mdash; el algoritmo calcula el mejor botín posible.</li>
+          <li>O dibuja tu propio camino con <b>Plan propio</b> y comprueba cuánto te dejas.</li>
+          <li>Ajusta <b>capacidad, tiempo y velocidad</b> con los sliders del panel.</li>
+          <li>Pulsa <b>PLAY</b> y cruza los dedos.</li>
+        </ol>
+      </div>
+      <div class="bvn-footer">¡Buena suerte, ladrón!</div>
+      <button class="btn verde grande bvn-btn-jugar" id="bvn-jugar">
+        <svg class="ico"><use href="#i-play"></use></svg> ¡A robar!
+      </button>
+    </div>
+    <img class="bvn-char bvn-poli" id="bvn-poli" src="assets/sprites/poli.webp" alt="">
+  </div>
+</div>
+
 <div id="app">
   <header class="top">
     <h1>EL GOLPE</h1>

@@ -698,6 +698,23 @@ function bucle() {
 // Hook de depuracion para pruebas automatizadas (inofensivo en produccion).
 window.__heist = { estado, R, celdaABase: R.celdaABase };
 
+// ---------- Modal bienvenida ----------
+function iniciarBienvenida() {
+  const modal = $('#bienvenida');
+  if (!modal) return;
+  // versión de caché en los sprites del modal
+  if (window.__V) {
+    $('#bvn-ladron').src = `assets/sprites/ladron.webp?v=${window.__V}`;
+    $('#bvn-poli').src   = `assets/sprites/poli.webp?v=${window.__V}`;
+  }
+  const cerrar = () => modal.classList.add('oculto');
+  $('#bvn-cerrar').addEventListener('click', cerrar);
+  $('#bvn-jugar').addEventListener('click', cerrar);
+  // click en el overlay (fuera del panel) también cierra
+  modal.addEventListener('click', e => { if (e.target === modal) cerrar(); });
+}
+
 // ---------- Arranque ----------
 enlazarControles(); enlazarCanvas();
+iniciarBienvenida();
 cargar().catch(err => { document.body.innerHTML = '<p style="padding:20px;color:#fff">Error al cargar: ' + err.message + '</p>'; console.error(err); });
