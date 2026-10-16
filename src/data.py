@@ -23,7 +23,7 @@ def load_instance(path):
 
 
 def inventory():
-    # Una fila por fichero: cuantos objetos, que capacidad y que tamano tendria la tabla de DP
+    # Una fila por fichero: cuantos objetos, que capacidad y que tamaño tendria la tabla de DP
     filas = []
     for fichero in DATA_DIR.iterdir():
         values, volumes, capacity = load_instance(fichero)
