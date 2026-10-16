@@ -15,12 +15,11 @@ hasta llegar a la solución del problema completo. Lo probamos con los 22 datase
 
 | Fichero | Qué hace | Funciones | Estado |
 |---|---|---|---|
-| `src/data.py` | Lee los ficheros `ks_*` y resume los 22 datasets | `load_instance()`, `inventory()` | hecho |
+| `src/data.py` | Lee un fichero `ks_*` | `load_instance()` | hecho |
 | `src/knapsack.py` | Resuelve una mochila con el solver de programación dinámica de OR-Tools | `resolver()` | hecho |
 | `src/run_all.py` | Lanza el solver en los 22 datasets, comprueba el resultado y guarda valor, tiempo y objetos | `main()` | hecho |
 
-Se lanza con `.venv/bin/python -m src.data` (escribe `outputs/inventory.csv`) y con
-`.venv/bin/python -m src.run_all` (escribe `outputs/results.csv` y `outputs/solutions/`).
+Se lanza con `.venv/bin/python -m src.run_all` (escribe `outputs/results.csv` y `outputs/solutions/`).
 
 ## Formato de los datos
 
@@ -183,7 +182,7 @@ valor total bastaría con una fila, pero para el ladrón la lista de objetos es 
 
 La DP no es gratis: la tabla tiene `n · K` celdas, y **`K` no es pequeño en todos los datasets**.
 
-El inventario completo está en `outputs/inventory.csv`. Estos son los casos que importan:
+El inventario completo (calculado una vez al principio) está en `outputs/inventory.csv`. Estos son los casos que importan:
 
 | Dataset | Objetos | Capacidad `K` | Celdas de la tabla (n · K) | Tabla a 1 byte por celda |
 |---|---|---|---|---|
@@ -222,12 +221,13 @@ la opción segura. Los valores de ambos coinciden en todos los datasets donde lo
 
 ## `resolver(values, volumes, capacity)`
 
-Crea el solver de DP, le da los datos y devuelve `(valor_total, elegidos, optimo)`.
+Crea el solver de DP, le da los datos y devuelve `(valor_total, cogidos, optimo)`, donde `cogidos` es un array de True/False con un valor por objeto.
 
 - `KnapsackSolver(SolverType.KNAPSACK_DYNAMIC_PROGRAMMING_SOLVER, ...)`: elige el algoritmo de DP.
 - `set_time_limit(600)`: corta a los 10 minutos; si se agota, `optimo` sale `False`.
-- `init(valores, [volumenes], [capacidad])`: los volúmenes y la capacidad van en listas porque el
-  solver admite varias restricciones a la vez (una mochila con peso Y volumen, por ejemplo).
+- `init(valores, array([volumenes]), array([capacidad]))`: los volúmenes llevan una fila y la capacidad
+  una posición por restricción, porque el solver admite varias a la vez (una mochila con peso Y volumen,
+  por ejemplo). Aquí solo hay una. Los arrays de NumPy se pasan tal cual, no hace falta convertirlos.
 - `solve()` devuelve el valor máximo; `best_solution_contains(i)` dice si el objeto `i` se coge.
 - Todo son enteros: los ficheros ya lo son (si no, habría que multiplicar por una potencia de 10).
 
@@ -251,12 +251,6 @@ Lee un fichero `ks_*` y devuelve tres cosas: los valores, los volúmenes y la ca
   (`skiprows=1` salta la primera línea). `int64` porque algunos datasets tienen volúmenes de cientos de
   millones y la suma de volúmenes llega a mil millones.
 - `tabla[:, 0]` son los valores y `tabla[:, 1]` los volúmenes.
-
-## `inventory()`
-
-Recorre `data/`, carga cada fichero y arma una tabla de pandas con una fila por dataset: objetos,
-capacidad, `celdas_tabla` (= objetos × capacidad, el tamaño de la tabla de DP) y volumen total. Al
-ejecutar el fichero la imprime y la guarda en `outputs/inventory.csv`.
 
 ---
 

@@ -2,7 +2,6 @@
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 OUT = Path(__file__).resolve().parents[1] / "outputs"
@@ -20,25 +19,3 @@ def load_instance(path):
     values = tabla[:, 0]
     volumes = tabla[:, 1]
     return values, volumes, capacity
-
-
-def inventory():
-    # Una fila por fichero: cuantos objetos, que capacidad y que tamaño tendria la tabla de DP
-    filas = []
-    for fichero in DATA_DIR.iterdir():
-        values, volumes, capacity = load_instance(fichero)
-        filas.append({
-            "fichero": fichero.name,
-            "objetos": len(values),
-            "capacidad": capacity,
-            "celdas_tabla": len(values) * capacity,
-            "volumen_total": int(volumes.sum()),
-        })
-    return pd.DataFrame(filas).sort_values(["objetos", "fichero"]).reset_index(drop=True)
-
-
-if __name__ == "__main__":
-    tabla = inventory()
-    tabla["MB_tabla_1byte"] = (tabla["celdas_tabla"] / 1e6).round(1)
-    print(tabla.to_string(index=False))
-    tabla.to_csv(OUT / "inventory.csv", index=False)
